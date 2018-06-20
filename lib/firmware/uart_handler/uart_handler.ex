@@ -9,7 +9,7 @@ defmodule Farmbot.Firmware.UartHandler do
   alias Farmbot.System.ConfigStorage
   import ConfigStorage, only: [update_config_value: 4, get_config_value: 3]
   alias Farmbot.Firmware
-  alias Firmware.{UartHandler, Utils}
+  alias Firmware.Utils
   import Utils
 
   @behaviour Firmware.Handler
@@ -140,18 +140,8 @@ defmodule Farmbot.Firmware.UartHandler do
     state
   end
 
-  defp handle_config({:config, "settings", "firmware_hardware", val}, state) do
-    if val != state.hw do
-      Logger.info 3, "firmware_hardware updated from #{state.hw} to #{val}"
-      Farmbot.BotState.set_sync_status(:maintenance)
-      UART.close(state.nerves)
-      UartHandler.Update.force_update_firmware(val)
-      open_tty(state.tty, state.nerves)
-      Farmbot.BotState.reset_sync_status
-      %{state | hw: val}
-    else
-      state
-    end
+  defp handle_config({:config, "settings", "firmware_hardware", _val}, _state) do
+    raise("FIXME")
   end
 
   defp handle_config(_, state) do

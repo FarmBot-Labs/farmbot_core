@@ -3,7 +3,6 @@ defmodule Farmbot.Firmware do
 
   use GenStage
   use Farmbot.Logger
-  alias Farmbot.Bootstrap.SettingsSync
   alias Farmbot.Firmware.{Command, CompletionLogs, Vec3, EstopTimer, Utils}
   import Utils
 
@@ -358,7 +357,6 @@ defmodule Farmbot.Firmware do
 
   defp handle_gcode(:idle, state) do
     maybe_cancel_timer(state.timer, state.current)
-    Farmbot.BotState.set_busy(false)
     if state.current do
       # This might be a bug in the FW
       if state.current.fun in [:home, :home_all] do
@@ -480,7 +478,6 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode(:busy, state) do
-    Farmbot.BotState.set_busy(true)
     maybe_cancel_timer(state.timer, state.current)
     timer = if state.current do
       start_timer(state.current, state.timeout_ms)
@@ -492,12 +489,11 @@ defmodule Farmbot.Firmware do
 
   defp handle_gcode(:done, state) do
     maybe_cancel_timer(state.timer, state.current)
-    Farmbot.BotState.set_busy(false)
     if state.current do
       do_reply(state, :ok)
-      {nil, %{state | current: nil}}
+      {:informational_settings, %{busy: true},  %{state | current: nil}}
     else
-      {nil, state}
+      {:informational_settings, %{busy: true},  state}
     end
   end
 

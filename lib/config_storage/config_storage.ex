@@ -11,57 +11,9 @@ defmodule Farmbot.System.ConfigStorage do
     Group, Config, BoolValue, FloatValue, StringValue,
     SyncCmd,
     PersistentRegimen,
-    NetworkInterface,
-    GpioRegistry,
   }
-  alias Farmbot.Farmware.Installer.Repository
 
   alias Farmbot.Asset.Regimen
-
-  def add_farmware_repo(manifest, url) do
-    Repository.changeset(manifest, %{url: url})
-    |> ConfigStorage.insert!()
-  end
-
-  def get_farmware_repo_by_url(url) do
-    query = from r in Repository, where: r.url == ^url
-    ConfigStorage.one(query)
-  end
-
-  def all_farmware_repos do
-    ConfigStorage.all(Repository)
-  end
-
-  def delete_gpio_registry(pin_num, sequence_id) do
-    case ConfigStorage.one(from g in GpioRegistry, where: g.pin == ^pin_num and g.sequence_id == ^sequence_id) do
-      nil -> :ok
-      obj -> ConfigStorage.delete!(obj)
-    end
-  end
-
-  def all_gpios do
-    ConfigStorage.all(GpioRegistry)
-  end
-
-  def add_gpio_registry(pin_num, sequence_id) do
-    reg = struct(GpioRegistry, [pin: pin_num, sequence_id: sequence_id])
-    ConfigStorage.insert!(reg)
-  end
-
-  @doc "Input a network config. Takes many settings as a map."
-  def input_network_config!(%{} = config) do
-    ConfigStorage.destroy_all_network_configs()
-    data = struct(NetworkInterface, config)
-    ConfigStorage.insert!(data)
-  end
-
-  def get_all_network_configs do
-    ConfigStorage.all(NetworkInterface)
-  end
-
-  def destroy_all_network_configs do
-    ConfigStorage.delete_all(NetworkInterface)
-  end
 
   @doc """
   Register a sync message from an external source.
