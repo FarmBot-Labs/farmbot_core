@@ -6,7 +6,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
   @uart_speed 115_200
 
   def maybe_update_firmware(hardware \\ nil) do
-    tty = Application.get_all_env(:farmbot)[:uart_handler][:tty]
+    tty = Application.get_all_env(:farmbot_core)[:uart_handler][:tty]
     hardware = case hardware do
       "farmduino" -> "F"
       "arduino" -> "R"
@@ -19,7 +19,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
   end
 
   def force_update_firmware(hardware \\ nil) do
-    tty = Application.get_all_env(:farmbot)[:uart_handler][:tty]
+    tty = Application.get_all_env(:farmbot_core)[:uart_handler][:tty]
     hardware = case hardware do
       "farmduino" -> "F"
       "arduino" -> "R"
@@ -97,7 +97,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
       [ver] -> ver
       [ver, _] -> ver
     end
-    expected = Application.get_env(:farmbot, :expected_fw_versions)
+    expected = Application.get_env(:farmbot_core, :expected_fw_versions)
     fw_hw = String.last(current_version)
     cond do
       fw_hw != hardware ->
@@ -113,16 +113,16 @@ defmodule Farmbot.Firmware.UartHandler.Update do
 
   # Farmduino
   defp do_flash("F", uart, tty) do
-    avrdude("#{:code.priv_dir(:farmbot)}/farmduino.hex", uart, tty)
+    avrdude("#{:code.priv_dir(:farmbot_core)}/farmduino.hex", uart, tty)
   end
 
   defp do_flash("G", uart, tty) do
-    avrdude("#{:code.priv_dir(:farmbot)}/farmduino_k14.hex", uart, tty)
+    avrdude("#{:code.priv_dir(:farmbot_core)}/farmduino_k14.hex", uart, tty)
   end
 
   # Anything else. (should always be "R")
   defp do_flash(_, uart, tty) do
-    avrdude("#{:code.priv_dir(:farmbot)}/arduino_firmware.hex", uart, tty)
+    avrdude("#{:code.priv_dir(:farmbot_core)}/arduino_firmware.hex", uart, tty)
   end
 
   defp close(nil) do

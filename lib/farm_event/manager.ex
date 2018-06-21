@@ -463,7 +463,7 @@ defmodule Farmbot.FarmEvent.Manager do
   defp get_now(), do: Timex.now()
 
   defp maybe_farm_event_log(message) do
-    if Application.get_env(:farmbot, :farm_event_debug_log) do
+    if Application.get_env(:farmbot_core, :farm_event_debug_log) do
       Logger.debug(3, message)
     else
       :ok
@@ -472,6 +472,6 @@ defmodule Farmbot.FarmEvent.Manager do
 
   @doc "Enable or disbale debug logs for farmevents."
   def debug_logs(bool \\ true) when is_boolean(bool) do
-    Application.put_env(:farmbot, :farm_event_debug_log, bool)
+    Application.put_env(:farmbot_core, :farm_event_debug_log, bool)
   end
 end

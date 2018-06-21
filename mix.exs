@@ -1,4 +1,4 @@
-defmodule FarmbotNg.MixProject do
+defmodule FarmbotCore.MixProject do
   use Mix.Project
 
   @target System.get_env("MIX_TARGET") || "host"
@@ -18,7 +18,7 @@ defmodule FarmbotNg.MixProject do
 
   def project do
     [
-      app: :farmbot,
+      app: :farmbot_core,
       description: "The Brains of the Farmbot Project",
       elixir: "~> 1.6",
       # package: package(),

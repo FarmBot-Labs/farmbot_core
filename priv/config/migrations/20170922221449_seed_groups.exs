@@ -5,7 +5,7 @@ defmodule Farmbot.Config.Repo.Migrations.SeedGroups do
   import Ecto.Query, only: [from: 2]
 
   @group_names ["authorization", "hardware_params", "settings"]
-  @default_server Application.get_env(:farmbot, :default_server)
+  @default_server Application.get_env(:farmbot_core, :default_server)
   @default_server || raise("Missing application env config: `:default_server`")
 
   def change do
@@ -48,7 +48,7 @@ defmodule Farmbot.Config.Repo.Migrations.SeedGroups do
     create_value(StringValue, nil)  |> create_config(group_id, "firmware_hardware")
     create_value(StringValue, nil)  |> create_config(group_id, "timezone")
     create_value(StringValue, "{}") |> create_config(group_id, "user_env")
-    fpf_url = Application.get_env(:farmbot, :farmware)[:first_part_farmware_manifest_url]
+    fpf_url = Application.get_env(:farmbot_core, :farmware)[:first_part_farmware_manifest_url]
     create_value(StringValue, fpf_url) |> create_config(group_id, "first_party_farmware_url")
   end
 

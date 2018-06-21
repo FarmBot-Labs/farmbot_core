@@ -154,7 +154,7 @@ defmodule Farmbot.Firmware do
 
   def init([]) do
     handler_mod =
-      Application.get_env(:farmbot, :behaviour)[:firmware_handler] || raise("No fw handler.")
+      Application.get_env(:farmbot_core, :behaviour)[:firmware_handler] || raise("No fw handler.")
 
     case handler_mod.start_link() do
       {:ok, handler} ->

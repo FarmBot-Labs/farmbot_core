@@ -10,7 +10,7 @@ defmodule Farmbot.Asset.FarmEvent do
   @on_load :load_nif
   def load_nif do
     require Logger
-    nif_file = '#{:code.priv_dir(:farmbot)}/build_calendar'
+    nif_file = '#{:code.priv_dir(:farmbot_core)}/build_calendar'
 
     case :erlang.load_nif(nif_file, 0) do
       :ok -> :ok

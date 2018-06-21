@@ -3,7 +3,7 @@ defmodule Farmbot.Asset.Repo.Migrations.FixNamespaces do
   import Ecto.Query
 
   def change do
-    repo = Application.get_env(:farmbot, :repo_hack)
+    repo = Application.get_env(:farmbot_core, :repo_hack)
     if repo do
       do_update(repo)
     else

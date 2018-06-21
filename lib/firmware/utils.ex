@@ -30,8 +30,8 @@ defmodule Farmbot.Firmware.Utils do
 
   @doc "replace the firmware handler at runtime."
   def replace_firmware_handler(handler) do
-    old = Application.get_all_env(:farmbot)[:behaviour]
+    old = Application.get_all_env(:farmbot_core)[:behaviour]
     new = Keyword.put(old, :firmware_handler, handler)
-    Application.put_env(:farmbot, :behaviour, new)
+    Application.put_env(:farmbot_core, :behaviour, new)
   end
 end

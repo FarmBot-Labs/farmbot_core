@@ -100,7 +100,7 @@ defmodule Farmbot.Firmware.UartHandler do
     # If in target environment,
     #   this should be done by `Farmbot.Firmware.AutoDetector`.
     error_msg = "Please configure uart handler!"
-    tty = Application.get_env(:farmbot, :uart_handler)[:tty] || raise error_msg
+    tty = Application.get_env(:farmbot_core, :uart_handler)[:tty] || raise error_msg
 
     # Disable fw input logs after a reset of the
     # Fw handler if they were enabled.
@@ -213,9 +213,9 @@ defmodule Farmbot.Firmware.UartHandler do
   # Are better off crashing here, and being restarted.
   def handle_info({:nerves_uart, _, {:error, :eio}}, state) do
     Logger.error 1, "UART device removed."
-    old_env = Application.get_env(:farmbot, :behaviour)
+    old_env = Application.get_env(:farmbot_core, :behaviour)
     new_env = Keyword.put(old_env, :firmware_handler, Firmware.StubHandler)
-    Application.put_env(:farmbot, :behaviour, new_env)
+    Application.put_env(:farmbot_core, :behaviour, new_env)
     {:stop, {:error, :eio}, state}
   end
 
@@ -230,15 +230,15 @@ defmodule Farmbot.Firmware.UartHandler do
   end
 
   def handle_info({:nerves_uart, _, {_, {:report_software_version, v}}}, state) do
-    expected = Application.get_env(:farmbot, :expected_fw_versions)
+    expected = Application.get_env(:farmbot_core, :expected_fw_versions)
     if v in expected do
       {:noreply, [{:report_software_version, v}], state}
     else
       err = "Firmware version #{v} is not in expected versions: #{inspect expected}"
       Logger.error 1, err
-      old_env = Application.get_env(:farmbot, :behaviour)
+      old_env = Application.get_env(:farmbot_core, :behaviour)
       new_env = Keyword.put(old_env, :firmware_handler, Firmware.StubHandler)
-      Application.put_env(:farmbot, :behaviour, new_env)
+      Application.put_env(:farmbot_core, :behaviour, new_env)
       {:stop, :normal, state}
     end
   end

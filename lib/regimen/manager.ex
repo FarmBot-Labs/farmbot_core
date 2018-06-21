@@ -142,7 +142,7 @@ defmodule Farmbot.Regimen.Manager do
         "[#{regimen.name} #{regimen.farm_event_id}] is going to execute: #{sequence.name}"
       )
 
-      CeleryScript.execute(ast_with_label)
+      Farmbot.CeleryScript.Scheduler.schedule(ast_with_label)
     end
 
     next_item = List.first(regimen.regimen_items)
