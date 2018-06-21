@@ -1,4 +1,4 @@
-defmodule Farmbot.System.ConfigStorage.NetworkInterface do
+defmodule Farmbot.Config.NetworkInterface do
   @moduledoc false
 
   use Ecto.Schema

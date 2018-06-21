@@ -12,7 +12,7 @@ defmodule Farmbot.Regimen.NameProvider do
   """
 
   alias Farmbot.Asset.Regimen
-  import Farmbot.System.ConfigStorage, only: [persistent_regimen: 1, delete_persistent_regimen: 1]
+  import Farmbot.Asset, only: [persistent_regimen: 1, delete_persistent_regimen: 1]
   use GenServer
   use Farmbot.Logger
 

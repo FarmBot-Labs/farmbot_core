@@ -18,24 +18,25 @@ config :farmbot,
 config :farmbot, :farmware,
   first_part_farmware_manifest_url: nil
 
-config :farmbot, data_path: "tmp/"
+config :farmbot, ecto_repos: [Farmbot.Config.Repo, Farmbot.Logger.Repo, Farmbot.Asset.Repo]
 
-config :farmbot, ecto_repos: [Farmbot.System.ConfigStorage, Farmbot.Logger.Store, Farmbot.Repo]
-
-config :farmbot, Farmbot.System.ConfigStorage,
+config :farmbot, Farmbot.Config.Repo,
   adapter: Sqlite.Ecto2,
   loggers: [],
-  database: "._config_storage.sqlite3",
+  database: "._configs.sqlite3",
+  priv: "priv/config",
   pool_size: 1
 
-config :farmbot, Farmbot.Logger.Store,
+config :farmbot, Farmbot.Logger.Repo,
   adapter: Sqlite.Ecto2,
   loggers: [],
-  database: "._logger_store.sqlite3",
+  database: "._logs.sqlite3",
+  priv: "priv/logger",
   pool_size: 1
 
-config :farmbot, Farmbot.Repo,
+config :farmbot, Farmbot.Asset.Repo,
   adapter: Sqlite.Ecto2,
   loggers: [],
-  database: "._repo.sqlite3",
+  database: "._assets.sqlite3",
+  priv: "priv/asset",
   pool_size: 1

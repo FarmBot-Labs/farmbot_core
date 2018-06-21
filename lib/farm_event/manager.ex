@@ -22,7 +22,7 @@ defmodule Farmbot.FarmEvent.Manager do
   alias Farmbot.FarmEvent.Execution
   alias Farmbot.Asset
   alias Farmbot.Asset.{FarmEvent, Sequence, Regimen}
-  alias Farmbot.Repo.Registry
+  alias Farmbot.Asset.Repo.Registry
 
   @checkup_time 1000
   # @checkup_time 15_000

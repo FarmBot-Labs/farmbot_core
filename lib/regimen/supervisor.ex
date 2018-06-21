@@ -2,15 +2,14 @@ defmodule Farmbot.Regimen.Supervisor do
   @moduledoc false
   use Supervisor
   alias Farmbot.Asset
-  alias Farmbot.System.ConfigStorage
-  alias ConfigStorage.PersistentRegimen
+  alias Asset.PersistentRegimen
   alias Farmbot.Regimen.NameProvider
   use Farmbot.Logger
 
   @doc "Debug function to see what regimens are running."
   def whats_going_on do
     IO.warn("THIS SHOULD NOT BE USED IN PRODUCTION")
-    prs = ConfigStorage.all_persistent_regimens()
+    prs = Asset.all_persistent_regimens()
 
     Enum.map(prs, fn %PersistentRegimen{regimen_id: rid, farm_event_id: fid, time: start_time} =
                        pr ->
@@ -57,7 +56,7 @@ defmodule Farmbot.Regimen.Supervisor do
   @doc "Stops all running instances of a regimen."
   def stop_all_managers(regimen) do
     Logger.info(3, "Stopping all running regimens by id: #{inspect(regimen.id)}")
-    prs = ConfigStorage.persistent_regimens(regimen)
+    prs = Asset.persistent_regimens(regimen)
 
     for %PersistentRegimen{farm_event_id: feid} <- prs do
       reg_with_fe_id = %{regimen | farm_event_id: feid}
@@ -71,13 +70,13 @@ defmodule Farmbot.Regimen.Supervisor do
           GenServer.stop(regimen_server)
       end
 
-      ConfigStorage.delete_persistent_regimen(reg_with_fe_id)
+      Asset.delete_persistent_regimen(reg_with_fe_id)
     end
   end
 
   @doc "Looks up all regimen instances that are running, and reindexes them."
   def reindex_all_managers(regimen, time \\ nil) do
-    prs = ConfigStorage.persistent_regimens(regimen)
+    prs = Asset.persistent_regimens(regimen)
     Logger.debug(3, "Reindexing #{Enum.count(prs)} running regimens by id: #{regimen.id}")
 
     for %{farm_event_id: feid} <- prs do
@@ -90,7 +89,7 @@ defmodule Farmbot.Regimen.Supervisor do
 
         regimen_server ->
           if time do
-            ConfigStorage.update_persistent_regimen_time(regimen, time)
+            Asset.update_persistent_regimen_time(regimen, time)
           end
 
           GenServer.call(regimen_server, {:reindex, reg_with_fe_id, time})
@@ -104,7 +103,7 @@ defmodule Farmbot.Regimen.Supervisor do
   end
 
   def init([]) do
-    prs = ConfigStorage.all_persistent_regimens()
+    prs = Asset.all_persistent_regimens()
     children = build_children(prs)
     opts = [strategy: :one_for_one]
     supervise(children, opts)
@@ -114,7 +113,7 @@ defmodule Farmbot.Regimen.Supervisor do
     regimen.farm_event_id || raise "Starting a regimen process requires a farm event id tag."
 
     # Logger.debug 3, "Starting regimen: #{regimen.name} #{regimen.farm_event_id} at #{inspect time}"
-    ConfigStorage.add_persistent_regimen(regimen, time)
+    Asset.add_persistent_regimen(regimen, time)
     args = [regimen, time]
     opts = [restart: :transient, id: regimen.farm_event_id]
     spec = worker(Farmbot.Regimen.Manager, args, opts)
@@ -138,7 +137,7 @@ defmodule Farmbot.Regimen.Supervisor do
         Supervisor.delete_child(Farmbot.Regimen.Supervisor, regimen.farm_event_id)
     end
 
-    ConfigStorage.delete_persistent_regimen(regimen)
+    Asset.delete_persistent_regimen(regimen)
   end
 
   @doc "Builds a list of supervisor children. Will also delete and not build a child from stale data."
@@ -164,7 +163,7 @@ defmodule Farmbot.Regimen.Supervisor do
           regimen_items: []
         }
 
-        ConfigStorage.delete_persistent_regimen(reg || backup)
+        Asset.delete_persistent_regimen(reg || backup)
         _rejected = true
       end
     end)
@@ -174,7 +173,7 @@ defmodule Farmbot.Regimen.Supervisor do
       fe_time = Timex.parse!(farm_event.start_time, "{ISO:Extended}")
 
       if Timex.compare(fe_time, time) != 0 do
-        ConfigStorage.update_persistent_regimen_time(regimen, fe_time)
+        Asset.update_persistent_regimen_time(regimen, fe_time)
         Logger.debug(1, "FarmEvent start time and stored regimen start time are different.")
       end
 

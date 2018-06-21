@@ -56,6 +56,7 @@ defmodule FarmbotNg.MixProject do
   def application do
     [
       extra_applications: [:logger],
+      mod: {Farmbot.Core, []}
     ]
   end
 
@@ -68,7 +69,6 @@ defmodule FarmbotNg.MixProject do
       {:sqlite_ecto2, "~> 2.2.1"},
       {:uuid, "~> 1.1"},
       {:timex, "~> 3.3"},
-      {:poison, "~> 3.1"},
       {:nerves_uart, "~> 1.2"},
       {:ring_logger, "~> 0.4.1"}
     ]

@@ -6,7 +6,7 @@ defmodule Farmbot.Firmware do
   alias Farmbot.Firmware.{Command, CompletionLogs, Vec3, EstopTimer, Utils}
   import Utils
 
-  import Farmbot.System.ConfigStorage,
+  import Farmbot.Config,
     only: [get_config_value: 3, update_config_value: 4, get_config_as_map: 0]
 
   import CompletionLogs,

@@ -8,7 +8,7 @@ defmodule Farmbot.Regimen.Manager do
   alias Asset.Regimen
   import Farmbot.Regimen.NameProvider
 
-  import Farmbot.System.ConfigStorage,
+  import Farmbot.Config,
     only: [
       get_config_value: 3
     ]

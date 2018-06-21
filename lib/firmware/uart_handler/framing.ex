@@ -42,14 +42,14 @@ defmodule Farmbot.Firmware.UartHandler.Framing do
     separator = Keyword.get(args, :separator, "\n")
 
     log_input =
-      Farmbot.System.ConfigStorage.get_config_value(
+      Farmbot.Config.get_config_value(
         :bool,
         "settings",
         "firmware_input_log"
       )
 
     log_output =
-      Farmbot.System.ConfigStorage.get_config_value(
+      Farmbot.Config.get_config_value(
         :bool,
         "settings",
         "firmware_output_log"

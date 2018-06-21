@@ -1,7 +1,7 @@
 defmodule Farmbot.Firmware.CompletionLogs do
   @moduledoc false
   use Farmbot.Logger
-  import Farmbot.System.ConfigStorage, only: [get_config_value: 3]
+  import Farmbot.Config, only: [get_config_value: 3]
   alias Farmbot.Firmware.Command
 
   def maybe_log_complete(%Command{fun: :move_absolute, args: [pos | _]}, {:error, _reason}) do

@@ -1,6 +1,8 @@
 defmodule Farmbot.Core do
   use Supervisor
 
+  def start(_, _), do: Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end
@@ -8,14 +10,10 @@ defmodule Farmbot.Core do
   def init([]) do
     children = [
       {Farmbot.System.Registry,                 [] },
-      {Farmbot.System.ConfigStorage,            [] },
-      {Farmbot.System.ConfigStorage.Dispatcher, [] },
       {Farmbot.Logger.Supervisor,               [] },
+      {Farmbot.Config.Supervisor,               [] },
+      {Farmbot.Asset.Supervisor,                [] },
       {Farmbot.Firmware.Supervisor,             [] },
-      {Farmbot.Repo.Supervisor,                 [] },
-      {Farmbot.Regimen.NameProvider,            [] },
-      {Farmbot.FarmEvent.Supervisor,            [] },
-      {Farmbot.Regimen.Supervisor,              [] },
     ]
     Supervisor.init(children, [strategy: :one_for_one])
   end

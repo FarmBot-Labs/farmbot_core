@@ -1,10 +1,10 @@
-defmodule Farmbot.System.ConfigStorage.MigrationHelpers do
+defmodule Farmbot.Config.MigrationHelpers do
   @moduledoc false
 
   # This is pretty bad practice, but i don't plan on really changing it at all.
 
-  alias Farmbot.System.ConfigStorage
-  alias ConfigStorage.{Config, StringValue, BoolValue, FloatValue}
+  alias Farmbot.Config
+  alias Config.{Repo, Config, StringValue, BoolValue, FloatValue}
 
   @auth_group_id 1
   @hw_param_group_id 2
@@ -35,7 +35,7 @@ defmodule Farmbot.System.ConfigStorage.MigrationHelpers do
          value.id
        )
     |> Config.changeset()
-    |> ConfigStorage.insert!()
+    |> Repo.insert!()
   end
 
   def create_value(type, val \\ nil) do
@@ -47,6 +47,6 @@ defmodule Farmbot.System.ConfigStorage.MigrationHelpers do
     |> struct()
     |> Map.put(:value, val)
     |> type.changeset()
-    |> ConfigStorage.insert!()
+    |> Repo.insert!()
   end
 end
