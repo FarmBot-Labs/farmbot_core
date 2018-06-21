@@ -63,14 +63,17 @@ defmodule FarmbotNg.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # Arduino Firmware stuff.
       {:elixir_make, "~> 0.4.1", runtime: false},
+      {:nerves_uart, "~> 1.2"},
+
       {:gen_stage, "~> 0.12"},
+
+      # Storage of data.
       {:ecto, "~> 2.2.2"},
       {:sqlite_ecto2, "~> 2.2.1"},
-      {:uuid, "~> 1.1"},
+
       {:timex, "~> 3.3"},
-      {:nerves_uart, "~> 1.2"},
-      {:ring_logger, "~> 0.4.1"}
     ]
   end
 

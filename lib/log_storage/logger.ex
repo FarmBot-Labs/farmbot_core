@@ -121,17 +121,6 @@ defmodule Farmbot.Logger do
     |> elixir_log()
   end
 
-  def format_logs do
-    RingLogger.get()
-    |> Enum.map(fn({level, {_logger, message, timestamp_tup, _meta}}) ->
-      # {{year, month, day}, {hour, minute, second, _}} = timestamp_tup
-      timestamp  = Timex.to_datetime(timestamp_tup) |> DateTime.to_iso8601()
-      reg = ~r/\x1B\[[0-?]*[ -\/]*[@-~]/
-
-      "[#{level} #{timestamp}] - #{Regex.replace(reg, to_string(message), "")}"
-    end)
-  end
-
   defp elixir_log(%Farmbot.Log{} = log) do
     # todo fix time
     logger_meta = [function: log.function, file: log.file, line: log.line, module: log.module]

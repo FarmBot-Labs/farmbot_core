@@ -1,4 +1,4 @@
-defmodule Farmbot.System.Registry do
+defmodule Farmbot.Registry do
   @moduledoc "Farmbot System Global Registry"
   @reg FarmbotRegistry
   use GenServer
@@ -13,13 +13,16 @@ defmodule Farmbot.System.Registry do
     GenServer.call(__MODULE__, {:dispatch, namespace, event})
   end
 
-  def subscribe(pid) do
+  def subscribe(pid \\ self()) do
     Elixir.Registry.register(@reg, __MODULE__, pid)
   end
 
   def init([]) do
-    opts = [keys: :duplicate, partitions: System.schedulers_online, name: @reg]
+    # partitions = System.schedulers_online
+    partitions = 1
+    opts = [keys: :duplicate, partitions: partitions, name: @reg]
     {:ok, reg} = Elixir.Registry.start_link(opts)
+    Farmbot.Registry.Logger.start_link([])
     {:ok, %{reg: reg}}
   end
 

@@ -117,7 +117,7 @@ defmodule Farmbot.Config do
   end
 
   defp dispatch(%{value: value} = val, group, key) do
-    IO.inspect {group, key, value}
+    Farmbot.Registry.dispatch(__MODULE__, {group, key, value})
     val
   end
 end
