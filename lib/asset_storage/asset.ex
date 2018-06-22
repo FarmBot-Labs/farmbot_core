@@ -84,6 +84,7 @@ defmodule Farmbot.Asset do
       # If it does not, just return the newly created object.
       nil ->
         change = mod.changeset(struct(mod, not_struct), not_struct)
+        IO.inspect change, label: "HERE"
         Repo.insert!(change)
         :ok
       # if there is an existing record, copy the ecto  meta from the old
@@ -108,7 +109,7 @@ defmodule Farmbot.Asset do
   `sync_cmd`s are _not_ a source of truth for transactions that have been applied.
   Use the `Farmbot.Asset.Registry` for these types of events.
   """
-  def register_sync_cmd(remote_id, kind, body) do
+  def register_sync_cmd(remote_id, kind, body) when is_binary(kind) do
     SyncCmd.changeset(struct(SyncCmd, %{remote_id: remote_id, kind: kind, body: body}))
     |> Repo.insert!()
   end

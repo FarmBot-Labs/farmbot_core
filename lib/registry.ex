@@ -17,6 +17,17 @@ defmodule Farmbot.Registry do
     Elixir.Registry.register(@reg, __MODULE__, pid)
   end
 
+  def drop_pattern(pattern, me, acc \\ []) do
+    receive do
+      {__MODULE__, {^pattern, _}} -> drop_pattern(pattern, me, acc)
+      other -> drop_pattern(pattern, me, [other | acc])
+    after 100 ->
+      for msg <- Enum.reverse(acc) do
+        send(me, msg)
+      end
+    end
+  end
+
   def init([]) do
     # partitions = System.schedulers_online
     partitions = 1
