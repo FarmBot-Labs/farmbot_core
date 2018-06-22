@@ -110,7 +110,12 @@ defmodule Farmbot.Firmware.StubHandler do
     dispatch = if state.locked? do
       [:report_emergency_lock]
     else
-      [:idle]
+      [
+        {:report_current_position, state.pos.x, state.pos.y, state.pos.z},
+        {:report_encoder_position_scaled, state.pos.x, state.pos.y, state.pos.z},
+        {:report_encoder_position_raw, state.pos.x, state.pos.y, state.pos.z},
+        :idle,
+      ]
     end
     {:noreply, dispatch, state}
   end

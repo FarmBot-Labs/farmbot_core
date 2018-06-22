@@ -3,15 +3,10 @@ defmodule Farmbot.Core do
   Core Farmbot Services.
   This includes Logging, Configuration, Asset management and Firmware.
   """
-  use Supervisor
+  use Application
 
   @doc false
   def start(_, _), do: Supervisor.start_link(__MODULE__, [], name: __MODULE__)
-
-  @doc false
-  def start_link(args) do
-    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
-  end
 
   def init([]) do
     children = [
