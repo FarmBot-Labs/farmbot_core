@@ -1,8 +1,7 @@
 defmodule Farmbot.Core do
   @moduledoc """
   Core Farmbot Services.
-  This includes Logging, Configuration, Asset management and
-  FIrmware.
+  This includes Logging, Configuration, Asset management and Firmware.
   """
   use Supervisor
 
