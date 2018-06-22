@@ -84,7 +84,6 @@ defmodule Farmbot.Asset do
       # If it does not, just return the newly created object.
       nil ->
         change = mod.changeset(struct(mod, not_struct), not_struct)
-        IO.inspect change, label: "HERE"
         Repo.insert!(change)
         :ok
       # if there is an existing record, copy the ecto  meta from the old
@@ -181,7 +180,13 @@ defmodule Farmbot.Asset do
 
   @doc "Information about _this_ device."
   def device do
-    Repo.one(Device)
+    case Repo.all(Device) do
+      [device] -> device
+      [] -> nil
+      devices when is_list(devices) ->
+        Repo.delete_all(Device)
+        raise "There should only ever be 1 device!"
+    end
   end
 
   @doc "Get a Peripheral by it's id."
