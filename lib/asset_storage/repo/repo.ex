@@ -1,4 +1,5 @@
 defmodule Farmbot.Asset.Repo do
+  @moduledoc "Repo for storing Asset data."
   require Farmbot.Logger
   alias Farmbot.Asset.Repo.Snapshot
   use Ecto.Repo,

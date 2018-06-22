@@ -1,6 +1,6 @@
 defmodule Farmbot.Asset do
   @moduledoc """
-  Hello Phoenix.
+  API for inserting and retrieving assets.
   """
 
   alias Farmbot.Asset

@@ -1,4 +1,5 @@
 defmodule Farmbot.EctoTypes.TermType do
+  @moduledoc "Encodes/decodes data via the Erlang Term Format"
   @behaviour Ecto.Type
 
   def type, do: :text

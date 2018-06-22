@@ -1,4 +1,5 @@
 defmodule Farmbot.BotState do
+  @moduledoc "Central State accumulator."
   use GenStage
 
   def start_link(args) do

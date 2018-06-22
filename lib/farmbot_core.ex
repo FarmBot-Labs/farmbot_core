@@ -6,8 +6,10 @@ defmodule Farmbot.Core do
   """
   use Supervisor
 
+  @doc false
   def start(_, _), do: Supervisor.start_link(__MODULE__, [], name: __MODULE__)
 
+  @doc false
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args, name: __MODULE__)
   end

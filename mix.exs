@@ -20,11 +20,9 @@ defmodule FarmbotCore.MixProject do
       app: :farmbot_core,
       description: "The Brains of the Farmbot Project",
       elixir: "~> 1.6",
-      # package: package(),
       make_clean: ["clean"],
       make_env: make_env(),
       compilers: [:elixir_make] ++ Mix.compilers(),
-      test_coverage: [tool: ExCoveralls],
       version: @version,
       target: @target,
       commit: commit(),
@@ -37,17 +35,8 @@ defmodule FarmbotCore.MixProject do
         plt_add_apps: [:mix],
         flags: []
       ],
-      preferred_cli_env: [
-        test: :test,
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test,
-        "coveralls.circle": :test
-      ],
       source_url: "https://github.com/Farmbot/farmbot_os",
       homepage_url: "http://farmbot.io",
-      # docs: docs()
     ]
   end
 
@@ -74,7 +63,8 @@ defmodule FarmbotCore.MixProject do
 
       {:timex, "~> 3.3"},
 
-      {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end
 

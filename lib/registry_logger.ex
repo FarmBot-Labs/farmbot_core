@@ -1,4 +1,5 @@
 defmodule Farmbot.Registry.Logger do
+  @moduledoc false
   use GenServer
   require Logger
 

@@ -1,5 +1,5 @@
 defmodule Farmbot.Asset.Repo.Snapshot do
-  @moduledoc false
+  @moduledoc "Opaque data type. Hash of the entire Repo."
   alias Farmbot.Asset.Repo.Snapshot
 
   defmodule Diff do

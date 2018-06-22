@@ -2,6 +2,7 @@ defmodule Farmbot.Logger do
   @moduledoc """
   Log messages to Farmot endpoints.
   """
+  
   alias Farmbot.Logger.Repo
   import Ecto.Query, only: [from: 2]
 
