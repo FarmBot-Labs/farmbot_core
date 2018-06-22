@@ -27,11 +27,11 @@ defmodule Farmbot.Asset do
 
   def fragment_sync(verbosity \\ 1) do
     Farmbot.Logger.busy verbosity, "Syncing"
-    Farmbot.BotState.set_sync_status(:syncing)
+    Farmbot.Registry.dispatch(__MODULE__, {:sync_status, :syncing})
     old = Repo.snapshot()
     all_sync_cmds = all_sync_cmds()
 
-    Farmbot.Repo.transaction fn() ->
+    Repo.transaction fn() ->
       for cmd <- all_sync_cmds do
         apply_sync_cmd(cmd)
       end
@@ -39,9 +39,9 @@ defmodule Farmbot.Asset do
 
     new = Repo.snapshot()
     diff = Snapshot.diff(old, new)
-    Farmbot.Repo.Registry.dispatch(diff)
+    Farmbot.Registry.dispatch(__MODULE__, {:sync_diff, diff})
     destroy_all_sync_cmds()
-    Farmbot.BotState.set_sync_status(:synced)
+    Farmbot.Registry.dispatch(__MODULE__, {:sync_status, :synced})
     Farmbot.Logger.success verbosity, "Synced"
     :ok
   end
@@ -49,14 +49,14 @@ defmodule Farmbot.Asset do
   def apply_sync_cmd(cmd) do
     mod = Module.concat(["Farmbot", "Asset", cmd.kind])
     if Code.ensure_loaded?(mod) do
-      Farmbot.BotState.set_sync_status(:syncing)
+      Farmbot.Registry.dispatch(__MODULE__, {:sync_status, :syncing})
       old = Repo.snapshot()
       Farmbot.Logger.debug(3, "Syncing #{cmd.kind}")
       do_apply_sync_cmd(cmd)
       new = Repo.snapshot()
       diff = Snapshot.diff(old, new)
-      Farmbot.Repo.Registry.dispatch(diff)
-      Farmbot.BotState.set_sync_status(:synced)
+      Farmbot.Registry.dispatch(__MODULE__, {:sync_diff, diff})
+      Farmbot.Registry.dispatch(__MODULE__, {:sync_status, :synced})
     else
       Farmbot.Logger.warn(3, "Unknown module: #{mod} #{inspect(cmd)}")
     end
@@ -66,12 +66,12 @@ defmodule Farmbot.Asset do
   # When `body` is nil, it means an object was deleted.
   def do_apply_sync_cmd(%{body: nil, remote_id: id, kind: kind}) do
     mod = Module.concat(["Farmbot", "Asset", kind])
-    case Farmbot.Repo.get(mod, id) do
+    case Repo.get(mod, id) do
       nil ->
         :ok
 
       existing ->
-        Farmbot.Repo.delete!(existing)
+        Repo.delete!(existing)
         :ok
     end
   end
@@ -80,17 +80,17 @@ defmodule Farmbot.Asset do
     not_struct = strip_struct(obj)
     mod = Module.concat(["Farmbot", "Asset", kind])
     # We need to check if this object exists in the database.
-    case Farmbot.Repo.get(mod, id) do
+    case Repo.get(mod, id) do
       # If it does not, just return the newly created object.
       nil ->
         change = mod.changeset(struct(mod, not_struct), not_struct)
-        Farmbot.Repo.insert!(change)
+        Repo.insert!(change)
         :ok
       # if there is an existing record, copy the ecto  meta from the old
       # record. This allows `insert_or_update` to work properly.
       existing ->
         mod.changeset(existing, not_struct)
-        |> Farmbot.Repo.update!
+        |> Repo.update!
         :ok
     end
   end
