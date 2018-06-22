@@ -54,29 +54,6 @@ defmodule Farmbot.Logger do
     end
   end
 
-  @doc false
-  defmacro __using__(_) do
-    quote do
-      alias Farmbot.Logger
-      import Farmbot.Logger, only: [
-        debug: 3,
-        debug: 2,
-        info: 3,
-        info: 2,
-        busy: 3,
-        busy: 2,
-        success: 3,
-        success: 2,
-        warn: 3,
-        warn: 2,
-        error: 3,
-        error: 2,
-        fun: 2,
-        fun: 3
-      ]
-    end
-  end
-
   def insert_log!(%Farmbot.Log{} = log) do
     Farmbot.Log.changeset(log, %{})
     |> Repo.insert!()

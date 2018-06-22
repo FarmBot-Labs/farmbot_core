@@ -1,7 +1,7 @@
 defmodule Farmbot.Regimen.Manager do
   @moduledoc "Manages a Regimen"
 
-  use Farmbot.Logger
+  require Farmbot.Logger
   use GenServer
   alias Farmbot.CeleryScript
   alias Farmbot.Asset
@@ -69,13 +69,13 @@ defmodule Farmbot.Regimen.Manager do
       state = build_next_state(regimen, first_item, self(), initial_state)
       {:ok, state}
     else
-      Logger.warn(2, "[#{regimen.name} #{regimen.farm_event_id}] has no items on regimen.")
+      Farmbot.Logger.warn(2, "[#{regimen.name} #{regimen.farm_event_id}] has no items on regimen.")
       {:ok, initial_state}
     end
   end
 
   def handle_call({:reindex, regimen, time}, _from, state) do
-    Logger.debug(3, "Reindexing regimen by id: #{regimen.id}")
+    Farmbot.Logger.debug(3, "Reindexing regimen by id: #{regimen.id}")
     regimen.farm_event_id || raise "Can't reindex without farm_event_id"
     # parse and sort the regimen items
     items = filter_items(regimen)
@@ -95,7 +95,7 @@ defmodule Farmbot.Regimen.Manager do
       state = build_next_state(regimen, first_item, self(), initial_state)
       {:reply, :ok, state}
     else
-      Logger.warn(2, "[#{regimen.name} #{regimen.farm_event_id}] has no items on regimen.")
+      Farmbot.Logger.warn(2, "[#{regimen.name} #{regimen.farm_event_id}] has no items on regimen.")
       {:reply, :ok, initial_state}
     end
   end
@@ -121,7 +121,7 @@ defmodule Farmbot.Regimen.Manager do
   end
 
   defp complete(regimen, state) do
-    Logger.success(
+    Farmbot.Logger.success(
       2,
       "[#{regimen.name} #{regimen.farm_event_id}] has executed all current items!"
     )
@@ -137,7 +137,7 @@ defmodule Farmbot.Regimen.Manager do
       {:ok, ast} = CeleryScript.AST.decode(sequence)
       ast_with_label = %{ast | args: Map.put(ast.args, :label, sequence.name)}
 
-      Logger.busy(
+      Farmbot.Logger.busy(
         2,
         "[#{regimen.name} #{regimen.farm_event_id}] is going to execute: #{sequence.name}"
       )
@@ -181,7 +181,7 @@ defmodule Farmbot.Regimen.Manager do
         "[#{regimen.name}] scheduled by FarmEvent (#{regimen.farm_event_id}) " <>
           "will execute next item #{from_now} (#{timestr})"
 
-      Logger.info(3, msg)
+      Farmbot.Logger.info(3, msg)
     end
 
     %{state | timer: timer, regimen: regimen, next_execution: next_dt}

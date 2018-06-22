@@ -1,12 +1,12 @@
 defmodule Farmbot.Firmware.CompletionLogs do
   @moduledoc false
-  use Farmbot.Logger
+  require Farmbot.Logger
   import Farmbot.Config, only: [get_config_value: 3]
   alias Farmbot.Firmware.Command
 
   def maybe_log_complete(%Command{fun: :move_absolute, args: [pos | _]}, {:error, _reason}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.error 1, "Movement to #{inspect pos} failed."
+      Farmbot.Logger.error 1, "Movement to #{inspect pos} failed."
     end
   end
 
@@ -21,58 +21,58 @@ defmodule Farmbot.Firmware.CompletionLogs do
             _ -> pos
           end
         end)
-        Logger.success 1, "Movement to #{inspect pos} complete. (Stopped at end)"
+        Farmbot.Logger.success 1, "Movement to #{inspect pos} complete. (Stopped at end)"
       else
-        Logger.success 1, "Movement to #{inspect pos} complete."
+        Farmbot.Logger.success 1, "Movement to #{inspect pos} complete."
       end
     end
   end
 
   def maybe_log_complete(%Command{fun: :home}, {:error, _reason}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.error 1, "Movement to (0, 0, 0) failed."
+      Farmbot.Logger.error 1, "Movement to (0, 0, 0) failed."
     end
   end
 
   def maybe_log_complete(%Command{fun: :home_all}, _reply) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.success 1, "Movement to (0, 0, 0) complete."
+      Farmbot.Logger.success 1, "Movement to (0, 0, 0) complete."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_home_complete_x}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.success 2, "X Axis homing complete."
+      Farmbot.Logger.success 2, "X Axis homing complete."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_home_complete_y}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.success 2, "Y Axis homing complete."
+      Farmbot.Logger.success 2, "Y Axis homing complete."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_home_complete_z}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.success 2, "Z Axis homing complete."
+      Farmbot.Logger.success 2, "Z Axis homing complete."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_timeout_x}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.error 2, "X Axis timeout."
+      Farmbot.Logger.error 2, "X Axis timeout."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_timeout_y}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.error 2, "Y Axis timeout."
+      Farmbot.Logger.error 2, "Y Axis timeout."
     end
   end
 
   def maybe_log_complete(_command, {:error, :report_axis_timeout_z}) do
     unless get_config_value(:bool, "settings", "firmware_input_log") do
-      Logger.error 2, "Z Axis timeout."
+      Farmbot.Logger.error 2, "Z Axis timeout."
     end
   end
 

@@ -18,8 +18,7 @@ defmodule Farmbot.FarmEvent.Manager do
   # credo:disable-for-this-file Credo.Check.Refactor.FunctionArity
 
   use GenServer
-  use Farmbot.Logger
-  alias Farmbot.FarmEvent.Execution
+  require Farmbot.Logger
   alias Farmbot.Asset
   alias Farmbot.Asset.{FarmEvent, Sequence, Regimen}
   alias Farmbot.Asset.Repo.Registry
@@ -46,7 +45,7 @@ defmodule Farmbot.FarmEvent.Manager do
   end
 
   def terminate(reason, _state) do
-    Logger.error(1, "FarmEvent Manager terminated: #{inspect(reason)}")
+    Farmbot.Logger.error(1, "FarmEvent Manager terminated: #{inspect(reason)}")
   end
 
   def handle_info({Registry, :addition, FarmEvent, data}, state) do
@@ -122,7 +121,7 @@ defmodule Farmbot.FarmEvent.Manager do
   end
 
   def handle_info({:DOWN, _, :process, _, error}, state) do
-    Logger.error(1, "Farmevent checkup process died: #{inspect(error)}")
+    Farmbot.Logger.error(1, "Farmevent checkup process died: #{inspect(error)}")
     timer = Process.send_after(self(), :checkup, @checkup_time)
     {:noreply, %{state | timer: timer, checkup: nil}}
   end
@@ -162,7 +161,7 @@ defmodule Farmbot.FarmEvent.Manager do
       # Map over the events for logging.
       # Both Sequences and Regimens have a `name` field.
       names = Enum.map(late_executables, &Map.get(elem(&1, 0), :name))
-      Logger.debug(3, "Time for events: #{inspect(names)} to be scheduled.")
+      Farmbot.Logger.debug(3, "Time for events: #{inspect(names)} to be scheduled.")
       schedule_events(late_executables, now)
     end
 
@@ -445,15 +444,11 @@ defmodule Farmbot.FarmEvent.Manager do
   defp schedule_events([{executable, farm_event} | rest], now) do
     # Spawn to be non blocking here. Maybe link to this process?
     time = Timex.parse!(farm_event.start_time, "{ISO:Extended}")
-
     cond do
       match?(%Regimen{}, executable) ->
-        spawn(fn ->
-          Execution.execute_event(executable, time)
-        end)
-
+        spawn(Regimen, :schedule_event, [executable, time])
       match?(%Sequence{}, executable) ->
-        spawn(fn -> Execution.execute_event(executable, now) end)
+        spawn(Sequence, :schedule_event, [executable, time])
     end
 
     # Continue enumeration.
@@ -464,7 +459,7 @@ defmodule Farmbot.FarmEvent.Manager do
 
   defp maybe_farm_event_log(message) do
     if Application.get_env(:farmbot_core, :farm_event_debug_log) do
-      Logger.debug(3, message)
+      Farmbot.Logger.debug(3, message)
     else
       :ok
     end

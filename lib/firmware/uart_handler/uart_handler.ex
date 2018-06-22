@@ -5,7 +5,7 @@ defmodule Farmbot.Firmware.UartHandler do
 
   use GenStage
   alias Nerves.UART
-  use Farmbot.Logger
+  require Farmbot.Logger
   import Farmbot.Config, only: [update_config_value: 4, get_config_value: 3]
   alias Farmbot.Firmware
   alias Firmware.Utils
@@ -94,7 +94,7 @@ defmodule Farmbot.Firmware.UartHandler do
   end
 
   def init([]) do
-    Logger.debug 3, "Uart handler init."
+    Farmbot.Logger.debug 3, "Uart handler init."
     # If in dev environment,
     #   it is expected that this be done at compile time.
     # If in target environment,
@@ -148,7 +148,7 @@ defmodule Farmbot.Firmware.UartHandler do
   end
 
   defp open_tty(tty, nerves \\ nil) do
-    Logger.debug 3, "Opening uart device: #{tty}"
+    Farmbot.Logger.debug 3, "Opening uart device: #{tty}"
     nerves = nerves || UART.start_link |> elem(1)
     Process.link(nerves)
     case UART.open(nerves, tty, [speed: 115_200, active: true]) do
@@ -165,7 +165,7 @@ defmodule Farmbot.Firmware.UartHandler do
   defp loop_until_idle(nerves, idle_count \\ 0)
 
   defp loop_until_idle(nerves, 2) do
-    Logger.success 3, "Got two idles. UART is up."
+    Farmbot.Logger.success 3, "Got two idles. UART is up."
     Process.sleep(1500)
     {:ok, nerves}
   end
@@ -173,17 +173,17 @@ defmodule Farmbot.Firmware.UartHandler do
   defp loop_until_idle(nerves, idle_count)
     when is_pid(nerves) and is_number(idle_count)
   do
-    Logger.debug 3, "Waiting for firmware idle."
+    Farmbot.Logger.debug 3, "Waiting for firmware idle."
     receive do
       {:nerves_uart, _, {:error, reason}} -> {:stop, reason}
       {:nerves_uart, _, {:partial, _}} -> loop_until_idle(nerves, idle_count)
       {:nerves_uart, _, {_, :idle}} -> loop_until_idle(nerves, idle_count + 1)
       {:nerves_uart, _, {_, {:debug_message, msg}}} ->
         if String.contains?(msg, "STARTUP") do
-          Logger.success 3, "Got #{msg}. UART is up."
+          Farmbot.Logger.success 3, "Got #{msg}. UART is up."
           {:ok, nerves}
         else
-          Logger.debug 3, "Got arduino debug while booting up: #{msg}"
+          Farmbot.Logger.debug 3, "Got arduino debug while booting up: #{msg}"
           loop_until_idle(nerves, idle_count)
         end
       {:nerves_uart, _, _msg} -> loop_until_idle(nerves, idle_count)
@@ -202,7 +202,7 @@ defmodule Farmbot.Firmware.UartHandler do
   end
 
   def terminate(reason, state) do
-    Logger.warn 1, "UART handler died: #{inspect reason}"
+    Farmbot.Logger.warn 1, "UART handler died: #{inspect reason}"
     if state.nerves do
       UART.close(state.nerves)
       UART.stop(:normal)
@@ -212,7 +212,7 @@ defmodule Farmbot.Firmware.UartHandler do
   # if there is an error, we assume something bad has happened, and we probably
   # Are better off crashing here, and being restarted.
   def handle_info({:nerves_uart, _, {:error, :eio}}, state) do
-    Logger.error 1, "UART device removed."
+    Farmbot.Logger.error 1, "UART device removed."
     old_env = Application.get_env(:farmbot_core, :behaviour)
     new_env = Keyword.put(old_env, :firmware_handler, Firmware.StubHandler)
     Application.put_env(:farmbot_core, :behaviour, new_env)
@@ -225,7 +225,7 @@ defmodule Farmbot.Firmware.UartHandler do
 
   # Unhandled gcodes just get ignored.
   def handle_info({:nerves_uart, _, {:unhandled_gcode, code_str}}, state) do
-    Logger.debug 3, "Got unhandled gcode: #{code_str}"
+    Farmbot.Logger.debug 3, "Got unhandled gcode: #{code_str}"
     {:noreply, [], state}
   end
 
@@ -235,7 +235,7 @@ defmodule Farmbot.Firmware.UartHandler do
       {:noreply, [{:report_software_version, v}], state}
     else
       err = "Firmware version #{v} is not in expected versions: #{inspect expected}"
-      Logger.error 1, err
+      Farmbot.Logger.error 1, err
       old_env = Application.get_env(:farmbot_core, :behaviour)
       new_env = Keyword.put(old_env, :firmware_handler, Firmware.StubHandler)
       Application.put_env(:farmbot_core, :behaviour, new_env)
@@ -256,7 +256,7 @@ defmodule Farmbot.Firmware.UartHandler do
       :ok
     else
       err = "Echo #{code} does not match #{state.current_cmd} (#{distance})"
-      Logger.error 3, err
+      Farmbot.Logger.error 3, err
     end
     {:noreply, [], %{state | current_cmd: nil}}
   end
@@ -270,12 +270,12 @@ defmodule Farmbot.Firmware.UartHandler do
   end
 
   def handle_info({:nerves_uart, _, bin}, state) when is_binary(bin) do
-    Logger.warn(3, "Unparsed Gcode: #{bin}")
+    Farmbot.Logger.warn(3, "Unparsed Gcode: #{bin}")
     {:noreply, [], state}
   end
 
   defp do_write(bin, state, dispatch \\ []) do
-    # Logger.debug 3, "writing: #{bin}"
+    # Farmbot.Logger.debug 3, "writing: #{bin}"
     case UART.write(state.nerves, bin) do
       :ok -> {:reply, :ok, dispatch, %{state | current_cmd: bin}}
       err -> {:reply, err, [], %{state | current_cmd: nil}}

@@ -1,7 +1,7 @@
 defmodule Farmbot.Firmware.UartHandler.Update do
   @moduledoc false
 
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   @uart_speed 115_200
 
@@ -39,29 +39,29 @@ defmodule Farmbot.Firmware.UartHandler.Update do
         ]
         :ok = Nerves.UART.open(uart, tty, [speed: @uart_speed])
         :ok = Nerves.UART.configure(uart, opts)
-        Logger.busy 3, "Waiting for firmware idle report."
+        Farmbot.Logger.busy 3, "Waiting for firmware idle report."
         do_fw_loop(uart, tty, :idle, hardware)
         close(uart)
       {:error, reason} ->
-        Logger.error 1, "Failed to connect to firmware for update: #{inspect reason}"
+        Farmbot.Logger.error 1, "Failed to connect to firmware for update: #{inspect reason}"
     end
   end
 
   defp do_fw_loop(uart, tty, flag, hardware) do
     receive do
       {:nerves_uart, _, {:error, reason}} ->
-        Logger.error 1, "Failed to connect to firmware for update during idle step: #{inspect reason}"
+        Farmbot.Logger.error 1, "Failed to connect to firmware for update during idle step: #{inspect reason}"
       {:nerves_uart, _, data} ->
         if String.contains?(data, "R00") do
           case flag do
             :idle ->
-              Logger.busy 3, "Waiting for next idle."
+              Farmbot.Logger.busy 3, "Waiting for next idle."
               do_fw_loop(uart, tty, :version, hardware)
             :version ->
               Process.sleep(500)
               # tell the FW to report its version.
               Nerves.UART.write(uart, "F83")
-              Logger.busy 3, "Waiting for firmware version report."
+              Farmbot.Logger.busy 3, "Waiting for firmware version report."
               do_wait_version(uart, tty, hardware)
           end
         else
@@ -69,7 +69,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
         end
     after
       15_000 ->
-        Logger.warn 1, "timeout waiting for firmware idle. Forcing flash."
+        Farmbot.Logger.warn 1, "timeout waiting for firmware idle. Forcing flash."
         do_flash(hardware, uart, tty)
     end
   end
@@ -77,7 +77,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
   defp do_wait_version(uart, tty, hardware) do
     receive do
       {:nerves_uart, _, {:error, reason}} ->
-        Logger.error 1, "Failed to connect to firmware for update: #{inspect reason}"
+        Farmbot.Logger.error 1, "Failed to connect to firmware for update: #{inspect reason}"
       {:nerves_uart, _, data} ->
         case String.split(data, "R83 ") do
           [_] ->
@@ -87,7 +87,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
         end
     after
       15_000 ->
-        Logger.warn 1, "timeout waiting for firmware version. Forcing flash."
+        Farmbot.Logger.warn 1, "timeout waiting for firmware version. Forcing flash."
         do_flash(hardware, uart, tty)
     end
   end
@@ -101,12 +101,12 @@ defmodule Farmbot.Firmware.UartHandler.Update do
     fw_hw = String.last(current_version)
     cond do
       fw_hw != hardware ->
-        Logger.warn 3, "Switching firmware hardware."
+        Farmbot.Logger.warn 3, "Switching firmware hardware."
         do_flash(hardware, uart, tty)
       current_version in expected ->
-        Logger.success 1, "Firmware is already correct version."
+        Farmbot.Logger.success 1, "Firmware is already correct version."
       true ->
-        Logger.busy 1, "#{current_version} != #{inspect expected}"
+        Farmbot.Logger.busy 1, "#{current_version} != #{inspect expected}"
         do_flash(fw_hw, uart, tty)
     end
   end
@@ -126,7 +126,7 @@ defmodule Farmbot.Firmware.UartHandler.Update do
   end
 
   defp close(nil) do
-    Logger.info 3, "No uart process."
+    Farmbot.Logger.info 3, "No uart process."
     :ok
   end
 
@@ -134,24 +134,24 @@ defmodule Farmbot.Firmware.UartHandler.Update do
     if Process.alive?(uart) do
       close = Nerves.UART.close(uart)
       stop = Nerves.UART.stop(uart)
-      Logger.info 3, "CLOSE: #{inspect close} STOP: #{stop}"
+      Farmbot.Logger.info 3, "CLOSE: #{inspect close} STOP: #{stop}"
       Process.sleep(2000) # to allow the FD to be closed.
     end
   end
 
   def avrdude(fw_file, uart, tty) do
     close(uart)
-    Logger.busy 3, "Starting avrdude."
+    Farmbot.Logger.busy 3, "Starting avrdude."
     args = ~w"-q -q -patmega2560 -cwiring -P#{tty} -b#{@uart_speed} -D -V -Uflash:w:#{fw_file}:i"
     opts = [stderr_to_stdout: true, into: IO.stream(:stdio, :line)]
     res = System.cmd("avrdude", args, opts)
     Process.sleep(1500) # wait to allow file descriptors to be closed.
     case res do
       {_, 0} ->
-        Logger.success 1, "Firmware flashed!"
+        Farmbot.Logger.success 1, "Firmware flashed!"
         :ok
       {_, err_code} ->
-        Logger.error 1, "Failed to flash Firmware! #{err_code}"
+        Farmbot.Logger.error 1, "Failed to flash Firmware! #{err_code}"
         :error
     end
   end

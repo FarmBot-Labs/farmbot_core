@@ -4,7 +4,7 @@ defmodule Farmbot.Regimen.Supervisor do
   alias Farmbot.Asset
   alias Asset.PersistentRegimen
   alias Farmbot.Regimen.NameProvider
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   @doc "Debug function to see what regimens are running."
   def whats_going_on do
@@ -55,7 +55,7 @@ defmodule Farmbot.Regimen.Supervisor do
 
   @doc "Stops all running instances of a regimen."
   def stop_all_managers(regimen) do
-    Logger.info(3, "Stopping all running regimens by id: #{inspect(regimen.id)}")
+    Farmbot.Logger.info(3, "Stopping all running regimens by id: #{inspect(regimen.id)}")
     prs = Asset.persistent_regimens(regimen)
 
     for %PersistentRegimen{farm_event_id: feid} <- prs do
@@ -64,7 +64,7 @@ defmodule Farmbot.Regimen.Supervisor do
 
       case GenServer.whereis(name) do
         nil ->
-          Logger.info(3, "Could not find regimen by id: #{reg_with_fe_id.id} and tag: #{feid}")
+          Farmbot.Logger.info(3, "Could not find regimen by id: #{reg_with_fe_id.id} and tag: #{feid}")
 
         regimen_server ->
           GenServer.stop(regimen_server)
@@ -77,7 +77,7 @@ defmodule Farmbot.Regimen.Supervisor do
   @doc "Looks up all regimen instances that are running, and reindexes them."
   def reindex_all_managers(regimen, time \\ nil) do
     prs = Asset.persistent_regimens(regimen)
-    Logger.debug(3, "Reindexing #{Enum.count(prs)} running regimens by id: #{regimen.id}")
+    Farmbot.Logger.debug(3, "Reindexing #{Enum.count(prs)} running regimens by id: #{regimen.id}")
 
     for %{farm_event_id: feid} <- prs do
       reg_with_fe_id = %{regimen | farm_event_id: feid}
@@ -85,7 +85,7 @@ defmodule Farmbot.Regimen.Supervisor do
 
       case GenServer.whereis(name) do
         nil ->
-          Logger.info(3, "Could not find regimen by id: #{reg_with_fe_id.id} and tag: #{feid}")
+          Farmbot.Logger.info(3, "Could not find regimen by id: #{reg_with_fe_id.id} and tag: #{feid}")
 
         regimen_server ->
           if time do
@@ -112,7 +112,7 @@ defmodule Farmbot.Regimen.Supervisor do
   def add_child(regimen, time) do
     regimen.farm_event_id || raise "Starting a regimen process requires a farm event id tag."
 
-    # Logger.debug 3, "Starting regimen: #{regimen.name} #{regimen.farm_event_id} at #{inspect time}"
+    # Farmbot.Logger.debug 3, "Starting regimen: #{regimen.name} #{regimen.farm_event_id} at #{inspect time}"
     Asset.add_persistent_regimen(regimen, time)
     args = [regimen, time]
     opts = [restart: :transient, id: regimen.farm_event_id]
@@ -126,13 +126,13 @@ defmodule Farmbot.Regimen.Supervisor do
 
     case GenServer.whereis(name) do
       nil ->
-        Logger.info(
+        Farmbot.Logger.info(
           3,
           "Could not find regimen by id: #{regimen.id} and tag: #{regimen.farm_event_id}"
         )
 
       _regimen_server ->
-        Logger.debug(3, "Stopping regimen: #{regimen.name} (#{regimen.farm_event_id})")
+        Farmbot.Logger.debug(3, "Stopping regimen: #{regimen.name} (#{regimen.farm_event_id})")
         Supervisor.terminate_child(Farmbot.Regimen.Supervisor, regimen.farm_event_id)
         Supervisor.delete_child(Farmbot.Regimen.Supervisor, regimen.farm_event_id)
     end
@@ -149,7 +149,7 @@ defmodule Farmbot.Regimen.Supervisor do
       if Asset.get_farm_event_by_id(feid) && reg do
         _rejected = false
       else
-        Logger.debug(
+        Farmbot.Logger.debug(
           3,
           "Deleting stale persistent regimen: regimen_id: #{rid} farm_event_id: #{feid}"
         )
@@ -174,7 +174,7 @@ defmodule Farmbot.Regimen.Supervisor do
 
       if Timex.compare(fe_time, time) != 0 do
         Asset.update_persistent_regimen_time(regimen, fe_time)
-        Logger.debug(1, "FarmEvent start time and stored regimen start time are different.")
+        Farmbot.Logger.debug(1, "FarmEvent start time and stored regimen start time are different.")
       end
 
       args = [regimen, fe_time]

@@ -75,7 +75,7 @@ defmodule Farmbot.Firmware.Gcode.Parser do
   end
 
   @spec parse_report_calibration(binary)
-    :: {binary, {:report_calibration, binary, binary}}
+    :: {binary, {:report_calibration, binary, :idle | :home | :end}}
   defp parse_report_calibration(r) do
     [axis_and_status | [q]] = String.split(r, " Q")
     <<a::size(8), b::size(8)>> = axis_and_status
@@ -118,7 +118,7 @@ defmodule Farmbot.Firmware.Gcode.Parser do
           | :report_encoder_position_raw
 
   @spec report_xyz(binary, reporter)
-    :: {binary, {reporter, binary, binary, binary}}
+    :: {binary, {reporter, float(), float(), float()}}
   defp report_xyz(position, reporter) when is_bitstring(position),
     do: position |> String.split(" ") |> do_parse_pos(reporter)
 
@@ -146,8 +146,7 @@ defmodule Farmbot.Firmware.Gcode.Parser do
 
   @doc false
   @spec parse_end_stops(binary)
-    :: {:report_end_stops,
-        binary, binary, binary, binary, binary, binary, binary}
+    :: {binary(), {:report_end_stops, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1}}
   def parse_end_stops(
     <<"XA", xa::size(8), 32,
       "XB", xb::size(8), 32,
@@ -167,9 +166,6 @@ defmodule Farmbot.Firmware.Gcode.Parser do
   defp pes(48), do: 0
   defp pes(49), do: 1
 
-  @doc false
-  @spec parse_pvq(binary, :report_parameter_value) ::
-          {:report_parameter_value, atom, integer, String.t()}
   def parse_pvq(params, :report_parameter_value)
       when is_bitstring(params),
       do: params |> String.split(" ") |> do_parse_params

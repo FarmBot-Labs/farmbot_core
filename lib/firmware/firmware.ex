@@ -2,7 +2,7 @@ defmodule Farmbot.Firmware do
   @moduledoc "Allows communication with the firmware."
 
   use GenStage
-  use Farmbot.Logger
+  require Farmbot.Logger
   alias Farmbot.Firmware.{Command, CompletionLogs, Vec3, EstopTimer, Utils}
   import Utils
 
@@ -167,7 +167,7 @@ defmodule Farmbot.Firmware do
         }
       {:error, reason} ->
         replace_firmware_handler(Farmbot.Firmware.StubHandler)
-        Logger.error 1, "Failed to initialize firmware: #{inspect reason} Falling back to stub implementation."
+        Farmbot.Logger.error 1, "Failed to initialize firmware: #{inspect reason} Falling back to stub implementation."
         init([])
     end
 
@@ -191,7 +191,7 @@ defmodule Farmbot.Firmware do
   end
 
   def handle_info({:EXIT, _, reason}, state) do
-    Logger.error 1, "Firmware handler: #{state.handler_mod} died: #{inspect reason}"
+    Farmbot.Logger.error 1, "Firmware handler: #{state.handler_mod} died: #{inspect reason}"
     case state.handler_mod.start_link() do
       {:ok, handler} ->
         new_state = %{state | handler: handler}
@@ -207,7 +207,7 @@ defmodule Farmbot.Firmware do
     case state.current do
       # Check if this timeout is actually talking about the current command.
       ^timeout_command = current ->
-        Logger.warn 1, "Timed out waiting for Firmware response. Retrying #{inspect current}) "
+        Farmbot.Logger.warn 1, "Timed out waiting for Firmware response. Retrying #{inspect current}) "
         case apply(state.handler_mod, current.fun, [state.handler | current.args]) do
           :ok ->
             timer = start_timer(current, state.timeout_ms)
@@ -219,7 +219,7 @@ defmodule Farmbot.Firmware do
 
       # If this timeout was not talking about the current command
       %Command{} = current ->
-        Logger.debug 3, "Got stray timeout for command: #{inspect current}"
+        Farmbot.Logger.debug 3, "Got stray timeout for command: #{inspect current}"
         {:noreply, [], %{state | timer: nil}}
 
       # If there is no current command, we got a different kind of stray.
@@ -271,7 +271,7 @@ defmodule Farmbot.Firmware do
   end
 
   defp do_queue_cmd(%Command{fun: _fun, args: _args, from: _from} = current, state) do
-    # Logger.busy 3, "FW Queuing: #{fun}: #{inspect from}"
+    # Farmbot.Logger.busy 3, "FW Queuing: #{fun}: #{inspect from}"
     new_q = :queue.in(current, state.queue)
     {:noreply, [], %{state | queue: new_q}}
   end
@@ -305,7 +305,7 @@ defmodule Farmbot.Firmware do
 
   defp handle_gcode({:debug_message, message}, state) do
     if get_config_value(:bool, "settings", "arduino_debug_messages") do
-      Logger.debug 3, "Arduino debug message: #{message}"
+      Farmbot.Logger.debug 3, "Arduino debug message: #{message}"
     end
     {nil, state}
   end
@@ -313,7 +313,7 @@ defmodule Farmbot.Firmware do
   defp handle_gcode(code, state) when code in [:error, :invalid_command] do
     maybe_cancel_timer(state.timer, state.current)
     if state.current do
-      Logger.error 1, "Got #{code} while executing `#{inspect state.current}`."
+      Farmbot.Logger.error 1, "Got #{code} while executing `#{inspect state.current}`."
       do_reply(state, {:error, :firmware_error})
       {nil, %{state | current: nil}}
     else
@@ -322,7 +322,7 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode(:report_no_config, state) do
-    Logger.busy 1, "Initializing Firmware."
+    Farmbot.Logger.busy 1, "Initializing Firmware."
     old = get_config_as_map()["hardware_params"]
     spawn __MODULE__, :do_read_params, [Map.delete(old, "param_version")]
     {nil, %{state | initialized: false, initializing: true}}
@@ -333,24 +333,24 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode(:idle, %{initialized: false, initializing: false} = state) do
-    Logger.busy 1, "Firmware not initialized yet. Waiting for R88 message."
+    Farmbot.Logger.busy 1, "Firmware not initialized yet. Waiting for R88 message."
     {nil, state}
   end
 
   defp handle_gcode(:idle, %{initialized: true, initializing: false, current: nil, z_needs_home_on_boot: true} = state) do
-    Logger.info 2, "Bootup homing Z axis"
+    Farmbot.Logger.info 2, "Bootup homing Z axis"
     spawn __MODULE__, :find_home, [:z]
     {nil, %{state | z_needs_home_on_boot: false}}
   end
 
   defp handle_gcode(:idle, %{initialized: true, initializing: false, current: nil, y_needs_home_on_boot: true} = state) do
-    Logger.info 2, "Bootup homing Y axis"
+    Farmbot.Logger.info 2, "Bootup homing Y axis"
     spawn __MODULE__, :find_home, [:y]
     {nil, %{state | y_needs_home_on_boot: false}}
   end
 
   defp handle_gcode(:idle, %{initialized: true, initializing: false, current: nil, x_needs_home_on_boot: true} = state) do
-    Logger.info 2, "Bootup homing X axis"
+    Farmbot.Logger.info 2, "Bootup homing X axis"
     spawn __MODULE__, :find_home, [:x]
     {nil, %{state | x_needs_home_on_boot: false}}
   end
@@ -360,11 +360,11 @@ defmodule Farmbot.Firmware do
     if state.current do
       # This might be a bug in the FW
       if state.current.fun in [:home, :home_all] do
-        Logger.warn 1, "Got idle during home."
+        Farmbot.Logger.warn 1, "Got idle during home."
         timer = start_timer(state.current, state.timeout_ms)
         {nil, %{state | timer: timer}}
       else
-        Logger.warn 1, "Got idle while executing a command."
+        Farmbot.Logger.warn 1, "Got idle while executing a command."
         do_reply(state, {:error, :timeout})
         {:informational_settings, %{busy: false, locked: false}, %{state | current: nil, idle: true}}
       end
@@ -392,7 +392,7 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode({:report_pin_mode, pin, mode_atom}, state) do
-    # Logger.debug 3, "Got pin mode report: #{pin}: #{mode_atom}"
+    # Farmbot.Logger.debug 3, "Got pin mode report: #{pin}: #{mode_atom}"
     mode = extract_pin_mode(mode_atom)
     case state.pins[pin] do
       %{mode: _, value: _} = pin_map ->
@@ -403,7 +403,7 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode({:report_pin_value, pin, value}, state) do
-    # Logger.debug 3, "Got pin value report: #{pin}: #{value} old: #{inspect state.pins[pin]}"
+    # Farmbot.Logger.debug 3, "Got pin value report: #{pin}: #{value} old: #{inspect state.pins[pin]}"
     case state.pins[pin] do
       %{mode: _, value: _} = pin_map ->
         {:pins, %{pin => %{pin_map | value: value}}, %{state | pins: %{state.pins | pin => %{pin_map | value: value}}}}
@@ -509,7 +509,7 @@ defmodule Farmbot.Firmware do
 
   defp handle_gcode({:report_calibration, axis, status}, state) do
     maybe_cancel_timer(state.timer, state.current)
-    Logger.busy 1, "Axis #{axis} calibration: #{status}"
+    Farmbot.Logger.busy 1, "Axis #{axis} calibration: #{status}"
     {nil, state}
   end
 
@@ -531,23 +531,23 @@ defmodule Farmbot.Firmware do
   end
 
   defp handle_gcode(code, state) do
-    Logger.warn(3, "unhandled code: #{inspect(code)}")
+    Farmbot.Logger.warn(3, "unhandled code: #{inspect(code)}")
     {nil, state}
   end
 
   defp maybe_cancel_timer(nil, current_command) do
     if current_command do
-      # Logger.debug 3, "[WEIRD] - No timer to cancel for command: #{inspect current_command}"
+      # Farmbot.Logger.debug 3, "[WEIRD] - No timer to cancel for command: #{inspect current_command}"
       :ok
     else
-      # Logger.debug 3, "[PROBABLY OK] - No timer to cancel, and no command here."
+      # Farmbot.Logger.debug 3, "[PROBABLY OK] - No timer to cancel, and no command here."
       :ok
     end
   end
 
   defp maybe_cancel_timer(timer, _current_command) do
     if Process.read_timer(timer) do
-      # Logger.debug 3, "[NORMAL] - Canceled timer: #{inspect timer} for command: #{inspect current_command}"
+      # Farmbot.Logger.debug 3, "[NORMAL] - Canceled timer: #{inspect timer} for command: #{inspect current_command}"
       Process.cancel_timer(timer)
       :ok
     else
@@ -557,7 +557,7 @@ defmodule Farmbot.Firmware do
 
   defp maybe_update_param_from_report(param, val) when is_binary(param) do
     real_val = if val, do: (val / 1), else: nil
-    # Logger.debug 3, "Firmware reported #{param} => #{val || -1}"
+    # Farmbot.Logger.debug 3, "Firmware reported #{param} => #{val || -1}"
     update_config_value(:float, "hardware_params", to_string(param), real_val)
   end
 
@@ -591,14 +591,14 @@ defmodule Farmbot.Firmware do
         str_param = to_string(param)
         case get_config_value(:float, "hardware_params", str_param) do
           ^val ->
-            Logger.success 1, "Calibrated #{param}: #{val}"
+            Farmbot.Logger.success 1, "Calibrated #{param}: #{val}"
             # SettingsSync.upload_fw_kv(str_param, val)
             raise("fixme")
             :ok
           _ -> report_calibration_callback(tries - 1, param, val)
         end
       {:error, reason} ->
-        Logger.error 1, "Failed to set #{param}: #{val} (#{inspect reason})"
+        Farmbot.Logger.error 1, "Failed to set #{param}: #{val} (#{inspect reason})"
         report_calibration_callback(tries - 1, param, val)
     end
   end
@@ -614,10 +614,10 @@ defmodule Farmbot.Firmware do
       %Command{fun: :emergency_lock, from: from} ->
         :ok = GenServer.reply from, {:error, :emergency_lock}
       %Command{fun: _fun, from: from} ->
-        # Logger.success 3, "FW Replying: #{fun}: #{inspect from}"
+        # Farmbot.Logger.success 3, "FW Replying: #{fun}: #{inspect from}"
         :ok = GenServer.reply from, reply
       nil ->
-        Logger.error 1, "FW Nothing to send reply: #{inspect reply} to!."
+        Farmbot.Logger.error 1, "FW Nothing to send reply: #{inspect reply} to!."
         :error
     end
   end

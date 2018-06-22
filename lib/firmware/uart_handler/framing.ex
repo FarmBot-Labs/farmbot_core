@@ -1,7 +1,7 @@
 defmodule Farmbot.Firmware.UartHandler.Framing do
   @behaviour Nerves.UART.Framing
   import Farmbot.Firmware.Gcode.Parser
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   # credo:disable-for-this-file Credo.Check.Refactor.FunctionArity
 
@@ -68,7 +68,7 @@ defmodule Farmbot.Firmware.UartHandler.Framing do
   def add_framing(data, state) do
     # maybe log output here
     if state.log_output do
-      Logger.debug(3, data)
+      Farmbot.Logger.debug(3, data)
     end
 
     {:ok, data <> state.separator, state}
@@ -179,13 +179,13 @@ defmodule Farmbot.Firmware.UartHandler.Framing do
 
   defp do_parse_code(processed, log_input) do
     if log_input do
-      Logger.debug(3, processed)
+      Farmbot.Logger.debug(3, processed)
     end
 
     parse_code(processed)
   rescue
     er ->
-      Logger.error(1, "Firmware parser error: #{Exception.message(er)}")
+      Farmbot.Logger.error(1, "Firmware parser error: #{Exception.message(er)}")
       {nil, :noop}
   end
 end

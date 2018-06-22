@@ -9,22 +9,24 @@ defmodule Farmbot.Asset.FarmEvent do
 
   @on_load :load_nif
   def load_nif do
-    require Logger
+    require Elixir.Logger
     nif_file = '#{:code.priv_dir(:farmbot_core)}/build_calendar'
 
     case :erlang.load_nif(nif_file, 0) do
       :ok -> :ok
       {:error, {:reload, _}} -> :ok
-      {:error, reason} -> Logger.warn("Failed to load nif: #{inspect(reason)}")
+      {:error, reason} -> Elixir.Logger.warn("Failed to load nif: #{inspect(reason)}")
     end
   end
+
+  @callback schedule_event(map, DateTime.t) :: any
 
   alias Farmbot.Asset.Repo.ModuleType
   alias Farmbot.EctoTypes.TermType
 
   use Ecto.Schema
   import Ecto.Changeset
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   schema "farm_events" do
     field(:start_time, :string)
@@ -100,7 +102,7 @@ defmodule Farmbot.Asset.FarmEvent do
         repeat,
         repeat_frequency_seconds
       ) do
-    Logger.error(1, "Using (very) slow calendar builder!")
+    Farmbot.Logger.error(1, "Using (very) slow calendar builder!")
     grace_period_cutoff_seconds = now_seconds - 60
 
     Range.new(start_time_seconds, end_time_seconds)

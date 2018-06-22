@@ -3,7 +3,7 @@ defmodule Farmbot.Firmware.EstopTimer do
   Module responsible for timing emails about E stops.
   """
   use GenServer
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   @msg "Farmbot has been E-Stopped for more than 10 minutes."
   # Ten minutes.
@@ -59,7 +59,7 @@ defmodule Farmbot.Firmware.EstopTimer do
     if state.already_sent do
       {:noreply, %{state | timer: nil}}
     else
-      Logger.warn 1, @msg, [channels: [:fatal_email]]
+      Farmbot.Logger.warn 1, @msg, [channels: [:fatal_email]]
       {:noreply, %{state | timer: nil, already_sent: true}}
     end
   end

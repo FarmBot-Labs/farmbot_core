@@ -9,8 +9,7 @@ defmodule FarmbotCore.MixProject do
   end
 
   defp arduino_commit do
-    opts = [cd: "c_src/farmbot-arduino-firmware"]
-
+    opts = [cd: Path.join("c_src", "farmbot-arduino-firmware")]
     System.cmd("git", ~w"rev-parse --verify HEAD", opts)
     |> elem(0)
     |> String.trim()
@@ -74,6 +73,8 @@ defmodule FarmbotCore.MixProject do
       {:sqlite_ecto2, "~> 2.2.1"},
 
       {:timex, "~> 3.3"},
+
+      {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false}
     ]
   end
 

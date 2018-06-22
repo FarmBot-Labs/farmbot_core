@@ -1,5 +1,5 @@
 defmodule Farmbot.Asset.Repo do
-  use Farmbot.Logger
+  require Farmbot.Logger
   alias Farmbot.Asset.Repo.Snapshot
   use Ecto.Repo,
     otp_app: :farmbot_core,

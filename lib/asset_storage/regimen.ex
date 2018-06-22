@@ -4,6 +4,8 @@ defmodule Farmbot.Asset.Regimen do
   """
 
   alias Farmbot.EctoTypes.TermType
+  alias Farmbot.Regimen.NameProvider
+  alias Farmbot.Regimen.Supervisor, as: RegimenSupervisor
 
   use Ecto.Schema
   import Ecto.Changeset
@@ -32,5 +34,14 @@ defmodule Farmbot.Asset.Regimen do
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:id)
+  end
+
+  @behaviour Farmbot.Asset.FarmEvent
+  def schedule_event(regimen, now) do
+    name = NameProvider.via(regimen)
+    case GenServer.whereis(name) do
+      nil -> {:ok, _pid} = RegimenSupervisor.add_child(regimen, now)
+      pid -> {:ok, pid}
+    end
   end
 end

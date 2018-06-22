@@ -3,7 +3,7 @@ defmodule Farmbot.Config.NetworkInterface do
 
   use Ecto.Schema
   import Ecto.Changeset
-  use Farmbot.Logger
+  require Farmbot.Logger
 
   schema "network_interfaces" do
     field(:name, :string, null: false)
