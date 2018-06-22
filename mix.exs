@@ -35,6 +35,8 @@ defmodule FarmbotCore.MixProject do
         plt_add_apps: [:mix],
         flags: []
       ],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test],
       source_url: "https://github.com/Farmbot/farmbot_os",
       homepage_url: "http://farmbot.io",
     ]
@@ -64,7 +66,8 @@ defmodule FarmbotCore.MixProject do
       {:timex, "~> 3.3"},
 
       {:dialyxir, "~> 1.0.0-rc.2", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.8", only: :test}
     ]
   end
 

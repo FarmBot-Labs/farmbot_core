@@ -21,7 +21,85 @@ defmodule Farmbot.Asset do
     PersistentRegimen
   }
 
+  alias Repo.Snapshot
+  require Farmbot.Logger
   import Ecto.Query
+
+  def fragment_sync(verbosity \\ 1) do
+    Farmbot.Logger.busy verbosity, "Syncing"
+    Farmbot.BotState.set_sync_status(:syncing)
+    old = Repo.snapshot()
+    all_sync_cmds = all_sync_cmds()
+
+    Farmbot.Repo.transaction fn() ->
+      for cmd <- all_sync_cmds do
+        apply_sync_cmd(cmd)
+      end
+    end
+
+    new = Repo.snapshot()
+    diff = Snapshot.diff(old, new)
+    Farmbot.Repo.Registry.dispatch(diff)
+    destroy_all_sync_cmds()
+    Farmbot.BotState.set_sync_status(:synced)
+    Farmbot.Logger.success verbosity, "Synced"
+    :ok
+  end
+
+  def apply_sync_cmd(cmd) do
+    mod = Module.concat(["Farmbot", "Asset", cmd.kind])
+    if Code.ensure_loaded?(mod) do
+      Farmbot.BotState.set_sync_status(:syncing)
+      old = Repo.snapshot()
+      Farmbot.Logger.debug(3, "Syncing #{cmd.kind}")
+      do_apply_sync_cmd(cmd)
+      new = Repo.snapshot()
+      diff = Snapshot.diff(old, new)
+      Farmbot.Repo.Registry.dispatch(diff)
+      Farmbot.BotState.set_sync_status(:synced)
+    else
+      Farmbot.Logger.warn(3, "Unknown module: #{mod} #{inspect(cmd)}")
+    end
+    destroy_sync_cmd(cmd)
+  end
+
+  # When `body` is nil, it means an object was deleted.
+  def do_apply_sync_cmd(%{body: nil, remote_id: id, kind: kind}) do
+    mod = Module.concat(["Farmbot", "Asset", kind])
+    case Farmbot.Repo.get(mod, id) do
+      nil ->
+        :ok
+
+      existing ->
+        Farmbot.Repo.delete!(existing)
+        :ok
+    end
+  end
+
+  def do_apply_sync_cmd(%{body: obj, remote_id: id, kind: kind}) do
+    not_struct = strip_struct(obj)
+    mod = Module.concat(["Farmbot", "Asset", kind])
+    # We need to check if this object exists in the database.
+    case Farmbot.Repo.get(mod, id) do
+      # If it does not, just return the newly created object.
+      nil ->
+        change = mod.changeset(struct(mod, not_struct), not_struct)
+        Farmbot.Repo.insert!(change)
+        :ok
+      # if there is an existing record, copy the ecto  meta from the old
+      # record. This allows `insert_or_update` to work properly.
+      existing ->
+        mod.changeset(existing, not_struct)
+        |> Farmbot.Repo.update!
+        :ok
+    end
+  end
+
+  defp strip_struct(%{__struct__: _, __meta__: _} = struct) do
+    Map.from_struct(struct) |> Map.delete(:__meta__)
+  end
+
+  defp strip_struct(already_map), do: already_map
 
   @doc """
   Register a sync message from an external source.
