@@ -114,4 +114,70 @@ defmodule Farmbot.AssetTest do
       refute Asset.device()
     end
   end
+
+  describe "Regimens" do
+    test "inserts a regimen"
+    test "inserts a regemin that uses a sequence"
+    test "persistent regimens need to be unique by their start time."
+  end
+
+  describe "FarmEvents" do
+    test "inserts a FarmEvent"
+  end
+
+  describe "Peripherals" do
+    test "inserts a Peripheral" do
+      per = %{id: id(), pin: 1, mode: 0, label: "laser beam"}
+      cmd_insert = Asset.register_sync_cmd(per.id, "Peripheral", per)
+      Asset.apply_sync_cmd(cmd_insert)
+      assert data = Asset.get_peripheral_by_id(per.id)
+      assert data.label == per.label
+    end
+  end
+
+  describe "Sensors" do
+    test "inserts a Sensor" do
+      sensor = %{id: id(), pin: 1, mode: 0, label: "lightning"}
+      cmd_insert = Asset.register_sync_cmd(sensor.id, "Sensor", sensor)
+      Asset.apply_sync_cmd(cmd_insert)
+      assert data = Asset.get_sensor_by_id(sensor.id)
+      assert data.label == sensor.label
+    end
+  end
+
+  describe "Points" do
+    test "inserts a Point" do
+      pnt = %{id: id(), name: "potato", x: 0, y: 101, z: -20, meta: %{}, pointer_type: "GenericPointer"}
+      cmd_insert = Asset.register_sync_cmd(pnt.id, "Point", pnt)
+      Asset.apply_sync_cmd(cmd_insert)
+      assert data = Asset.get_point_by_id(pnt.id)
+      assert data.name == pnt.name
+    end
+  end
+
+  describe "Tools" do
+    test "inserts a tool" do
+      tool = %{id: id(), name: "warp drive"}
+      tool_insert = Asset.register_sync_cmd(tool.id, "Tool", tool)
+      Asset.apply_sync_cmd(tool_insert)
+      assert data = Asset.get_tool_by_id(tool.id)
+      assert data.name == "warp drive"
+    end
+
+    test "gets the point assosiated with a tool" do
+      tool = %{id: id(), name: "trench digger"}
+      point = %{id: id(), tool_id: tool.id, name: "trench digger location", x: 0, y: 0, z: 0, meta:  %{}, pointer_type: "ToolSlot"}
+
+      _tool_insert = Asset.register_sync_cmd(tool.id, "Tool", tool)
+      _point_insert = Asset.register_sync_cmd(point.id, "Point", point)
+      Asset.fragment_sync()
+      assert point = Asset.get_point_from_tool(tool.id)
+      assert point.id == point.id
+      assert point.name == "trench digger location"
+    end
+  end
+
+  test "Delets all data."
+  test "Snapshot from a single diff works."
+  test "Inspecting a snapshot returns a nice hash."
 end
