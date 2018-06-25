@@ -2,7 +2,7 @@ defmodule Farmbot.Logger do
   @moduledoc """
   Log messages to Farmot endpoints.
   """
-  
+
   alias Farmbot.Logger.Repo
   import Ecto.Query, only: [from: 2]
 
@@ -60,11 +60,12 @@ defmodule Farmbot.Logger do
     |> Repo.insert!()
   end
 
-  def clear_log(%Farmbot.Log{} = log) do
-    Repo.delete!(log)
+  def get_logs(amnt) do
+    inspect_logs(amnt)
+    |> Enum.map(&Repo.delete!(&1))
   end
 
-  def get_logs(amnt) do
+  def inspect_logs(amnt) do
     from(Farmbot.Log, limit: ^amnt)
     |> Repo.all()
   end
@@ -93,6 +94,7 @@ defmodule Farmbot.Logger do
     |> dispatch_log()
   end
 
+  @doc false
   def dispatch_log(%Farmbot.Log{} = log) do
     log
     |> insert_log!()
@@ -106,4 +108,15 @@ defmodule Farmbot.Logger do
     Elixir.Logger.bare_log(logger_level, log, logger_meta)
     log
   end
+
+  @doc "Helper function for deciding if a message should be logged or not."
+  def should_log?(module, verbosity)
+  def should_log?(nil, verbosity) when verbosity <= 3, do: true
+  def should_log?(nil, _), do: false
+
+  def should_log?(module, verbosity) when verbosity <= 3 do
+    List.first(Module.split(module))  == "Farmbot"
+  end
+
+  def should_log?(_, _), do: false
 end
