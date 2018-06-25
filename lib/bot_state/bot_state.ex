@@ -15,8 +15,9 @@ defmodule Farmbot.BotState do
     configuration: struct(Configuration),
     informational_settings: struct(InformationalSettings),
     pins: %{},
-    process_info: %{},
-    gpio_registry: %{}
+    process_info: %{farmwares: %{}},
+    gpio_registry: %{},
+    user_env: %{jobs: %{}}
   ]
 
   use GenStage
