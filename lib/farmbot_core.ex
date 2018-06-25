@@ -5,8 +5,20 @@ defmodule Farmbot.Core do
   """
   use Application
 
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+  
   @doc false
-  def start(_, _), do: Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  def start(_, args), do: Supervisor.start_link(__MODULE__, args, name: __MODULE__)
+
+  def start_link(args), do: Supervisor.start_link(__MODULE__, args, name: __MODULE__)
 
   def init([]) do
     children = [
