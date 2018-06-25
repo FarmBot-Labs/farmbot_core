@@ -60,14 +60,18 @@ defmodule Farmbot.Logger do
     |> Repo.insert!()
   end
 
-  def get_logs(amnt) do
-    inspect_logs(amnt)
-    |> Enum.map(&Repo.delete!(&1))
+  @doc "Gets a log by it's id, deletes it."
+  def handle_log(id) do
+    case Repo.get(Farmbot.Log, id) do
+      %Farmbot.Log{} = log -> Repo.delete!(log)
+      nil -> nil
+    end
   end
 
-  def inspect_logs(amnt) do
-    from(Farmbot.Log, limit: ^amnt)
-    |> Repo.all()
+  @doc "Gets all available logs and deletes them."
+  def handle_all_logs do
+    Repo.all(Farmbot.Log)
+    |> Enum.map(&Repo.delete!(&1))
   end
 
   @doc false
@@ -99,6 +103,9 @@ defmodule Farmbot.Logger do
     log
     |> insert_log!()
     |> elixir_log()
+    |> fn(log) ->
+      Farmbot.Registry.dispatch(__MODULE__, {:log_ready, log.id})
+    end.()
   end
 
   defp elixir_log(%Farmbot.Log{} = log) do

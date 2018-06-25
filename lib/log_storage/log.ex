@@ -5,8 +5,8 @@ defmodule Farmbot.Log do
 
   defmodule LogLevelType do
     @moduledoc false
-    @level_atoms [:debug, :info, :error, :warn, :busy, :success]
-    @level_strs ["debug", "info", "error", "warn", "busy", "success"]
+    @level_atoms [:debug, :info, :error, :warn, :busy, :success, :fun]
+    @level_strs ["debug", "info", "error", "warn", "busy", "success", "fun"]
 
     def type, do: :string
 
